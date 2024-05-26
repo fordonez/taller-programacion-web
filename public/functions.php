@@ -1,11 +1,9 @@
 <?php
 
-function base64_url_decode(string $input): string|false
+function randomString(int $length = 16): string
 {
-    $decoded = base64_decode(str_replace(['-', '_'], ['+', '/'], $input), true);
-    if ($decoded === false) {
-        return false;
-    }
-    return $decoded;
+    $chars = 'abcdefghijklmnopqrstuvwxyz';
+    $chars.= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $chars.= '0123456789';
+    return substr(str_shuffle($chars), 0, $length);
 }
-

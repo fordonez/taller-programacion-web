@@ -46,10 +46,12 @@ class MySQL
         }
 
         $columns = implode(", ", array_keys($data));
-        $values = implode(", ", array_map([$this->connection, 'real_escape_string'], array_values($data)));
+        $values = implode("', '", array_map([$this->connection, 'real_escape_string'], array_values($data)));
 
         /** @noinspection SqlNoDataSourceInspection */
         $query = "INSERT INTO $table ($columns) VALUES ('$values')";
+
+        error_log($query);
 
         if ($this->connection->query($query) === true) {
             return true;

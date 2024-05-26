@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    google_id VARCHAR(255) DEFAULT NULL,
+    google_token VARCHAR(255) DEFAULT NULL,
+    google_name VARCHAR(255) DEFAULT NULL,
+    google_email VARCHAR(255) DEFAULT NULL,
+    google_picture VARCHAR(255) DEFAULT NULL,
+    google_locale VARCHAR(255) DEFAULT NULL
+);

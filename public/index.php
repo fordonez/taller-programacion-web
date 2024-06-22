@@ -130,7 +130,7 @@ function logout() {
 
 document.addEventListener('DOMContentLoaded', async _event => {
   const element = document.getElementById('prices');
-  const {price, timestamp} = await fetchPrices()
+  const { price } = await fetchPrices()
 
   global.price = price
   element.innerText = `1 USD = ${price} PEN`;

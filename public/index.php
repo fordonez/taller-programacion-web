@@ -7,88 +7,14 @@ require_once 'config.php';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Casa de Cambio</title>
+<link rel="stylesheet" href="./css/styles.css">
 <script src="https://accounts.google.com/gsi/client" async></script>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-.container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    text-align: center;
-}
-h1 {
-    color: #333;
-}
-.form-group {
-    margin-bottom: 15px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    text-align: left;
-}
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-}
-.btn {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    width: 100%;
-    border-radius: 5px;
-    font-size: 16px;
-}
-.btn:hover {
-    background-color: #0056b3;
-}
-.btn.red {
-    background-color: #ff0044;
-}
-.btn.red:hover {
-    background-color: #d50a3f;
-}
-.result {
-    margin: 15px 0;
-    font-size: 18px;
-    font-weight: bold;
-}
-.picture {
-    display: block;
-    margin: 5px auto;
-}
-.info {
-    text-align: left;
-    border-radius: 8px;
-    background-color: #F0F0F0;
-    padding: 5px;
-    margin-bottom: 10px;
-}
-</style>
 </head>
 <body>
 <div class="container">
     <h1>Casa de Cambio</h1>
-    <p>1 USD = 3.8 PEN</p>
+    <p id="prices" style="display:none"></p>
     <form id="exchangeForm">
-        <div class="form-group">
-            <label for="amount">Cantidad</label>
-            <input type="number" id="amount" name="amount" required>
-        </div>
         <div class="form-group">
             <label for="currencyPair">Moneda</label>
             <select id="currencyPair" name="currencyPair">
@@ -96,7 +22,11 @@ h1 {
                 <option value="penusd">Soles a Dólares</option>
             </select>
         </div>
-        <button type="button" class="btn" onclick="convertCurrency()">Convertir</button>
+        <div class="form-group">
+            <label for="amount">Cantidad</label>
+            <input type="number" id="amount" name="amount" required>
+        </div>
+        <button type="button" class="btn" onclick="convertCurrency()">Calcular</button>
     </form>
     <div class="result" id="result"></div>
 
@@ -136,7 +66,30 @@ if (isset($_SESSION['user'])) {
 </div>
 
 <script>
+const global = {
+  price: 1,
+}
+
+async function fetchPrices() {
+  try {
+    const response = await fetch('/prices.php', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching prices:', error);
+  }
+}
+
 function convertCurrency() {
+  const session = <?=isset($_SESSION['user']) ? 'true' : 'false'; ?>;
   const amount = document.getElementById('amount').value;
   const currencyPair = document.getElementById('currencyPair').value;
   const result = document.getElementById('result');
@@ -144,21 +97,45 @@ function convertCurrency() {
   let convertedAmount;
 
   // Tasas de cambio ficticias
-  const usdToPenRate = 3.8;
+  const usdToPenRate = global.price;
   const penToUsdRate = 1 / usdToPenRate;
 
-  if (currencyPair === 'usdpen') {
-    convertedAmount = amount * usdToPenRate;
-    result.innerText = `${amount} USD son ${convertedAmount.toFixed(2)} PEN.`;
-  } else {
-    convertedAmount = amount * penToUsdRate;
-    result.innerText = `${amount} PEN son ${convertedAmount.toFixed(2)} USD.`;
+  const addExchangeButton = pair => {
+    let m = '', rate = ''
+    if (currencyPair === 'usdpen') {
+      convertedAmount = amount * usdToPenRate;
+      m = `${amount} USD son ${convertedAmount.toFixed(2)} PEN`;
+      rate = usdToPenRate
+    } else {
+      convertedAmount = amount * penToUsdRate;
+      m = `${amount} PEN son ${convertedAmount.toFixed(2)} USD`;
+      rate = penToUsdRate
+    }
+
+    return session
+      ? `<button class="btn exchange"
+            data-pair="${pair}"
+            data-amount="${amount}"
+            data-rate="${rate}"
+        >${m}</button>`
+      : `${m}`
   }
+
+  result.innerHTML = addExchangeButton(currencyPair)
 }
 
 function logout() {
   window.location.href = '/logout.php';
 }
+
+document.addEventListener('DOMContentLoaded', async _event => {
+  const element = document.getElementById('prices');
+  const {price, timestamp} = await fetchPrices()
+
+  global.price = price
+  element.innerText = `1 USD = ${price} PEN`;
+  element.removeAttribute('style')
+});
 </script>
 </body>
 </html>
